@@ -30,7 +30,7 @@ picks a random character from the array of characters with that value, which is 
 
 Despite the name, the characters are Unicode. The range of values in normal ASCII characters is pretty narrow, but
 unicode has more range of values and therefore results in a prettier final image. But many characters in unicode are
-[non-spacing](#asciify-listcharacters-whitelist-and-blacklist), so some preprocessing of the character list is required.
+[non-spacing](#asciify-list_characters-whitelist-and-blacklist), so some preprocessing of the character list is required.
 
 The text is meant to be viewed in the Consola font.
 
@@ -86,7 +86,7 @@ Old area is x*y, new area must be 625;
 Both x and y are divided by sqrt(x*y/625); 
 New area will be x*y = (x/sqrt(x*y/625))*(y/sqrt(x*y/625)) = x*y/(x*y/625) = 625; 
 
-### get_true_weight(): find_lighter() amd find_darker()
+### get_true_weight(): find_lighter() and find_darker()
 Because unicode characters are not evenly distributed across weights, some weights are empty. If a pixel in the resized
 image is a weight that has no characters, the closest character in weight must be found and substituted. This is
 achieved by finding the immediate lighter weight with characters and the immediate darker weight with characters and to
