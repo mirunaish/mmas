@@ -109,6 +109,10 @@ The individual character blacklist and whitelist were created manually by lookin
 * [tomita pysynth](https://mdoege.github.io/PySynth/)
 * must have [ffmpeg](https://ffmpeg.org/download.html) installed and on the path
 
+## Instructions
+Run GUI.py to start the program. Pick a command from the command panel, enter the input required in the options panel,
+and click "convert".
+
 ## Sources
 * Documentation
   * https://docs.python.org/3.9/library/tkinter.ttk.html
