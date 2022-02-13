@@ -103,7 +103,7 @@ The individual character blacklist and whitelist were created manually by lookin
 
 ### Libraries / dependencies
 * tkinter `pip install tkinter`
-* pillow `pip install tkinter`
+* pillow `pip install pillow`
 * cv2 `pip install cv2`
 * pydub `pip install pydub`
 * [tomita pysynth](https://mdoege.github.io/PySynth/)
