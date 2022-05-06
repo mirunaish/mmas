@@ -82,9 +82,9 @@ is 625 RGB pixels, corresponding to 625 notes of varying lengths. Even with this
 minutes long.
 
 Math explanation:
-Old area is x*y, new area must be 625; 
-Both x and y are divided by sqrt(x*y/625); 
-New area will be x*y = (x/sqrt(x*y/625))*(y/sqrt(x*y/625)) = x*y/(x*y/625) = 625; 
+Old area is x\*y, new area must be 625; 
+Both x and y are divided by sqrt(x\*y/625); 
+New area will be x\*y = (x/sqrt(x\*y/625))\*(y/sqrt(x\*y/625)) = x\*y/(x\*y/625) = 625
 
 ### get_true_weight(): find_lighter() and find_darker()
 Because unicode characters are not evenly distributed across weights, some weights are empty. If a pixel in the resized
@@ -101,14 +101,6 @@ mostly non-monospace characters are blacklisted, but there are exceptions. For c
 
 The individual character blacklist and whitelist were created manually by looking through all the characters.
 
-### Libraries / dependencies
-* tkinter `pip install tkinter`
-* pillow `pip install pillow`
-* cv2 `pip install cv2`
-* pydub `pip install pydub`
-* [tomita pysynth](https://mdoege.github.io/PySynth/)
-* must have [ffmpeg](https://ffmpeg.org/download.html) installed and on the path
-
 ## Running
 Running is more problematic than it initially seems. The problem is that double-clicking on the .py file, running
 `python program.py`, and running `program.py` might all use different versions of python, and it is not always clear
@@ -120,6 +112,15 @@ folder.
 ## Instructions
 Pick a command from the command panel, enter the input required in the options panel,
 and click "convert".
+
+### Libraries / dependencies
+* tkinter
+* pillow
+* cv2
+* pydub
+* [tomita pysynth](https://mdoege.github.io/PySynth/)
+* must have [ffmpeg](https://ffmpeg.org/download.html) installed and on the path
+* run `pip install -r requirements.txt` to install requirements
 
 ## Sources
 * Documentation
