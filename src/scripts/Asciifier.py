@@ -3,7 +3,7 @@ from os.path import isdir
 from time import sleep
 from tkinter import ttk
 import random
-from DynamicGUI import DynamicGUI
+from src.DynamicGUI import DynamicGUI
 from PIL import Image, ImageChops
 
 

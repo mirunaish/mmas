@@ -2,12 +2,12 @@ import threading
 from os.path import isdir
 from tkinter import ttk
 from math import sqrt
-from PIL import Image, ImageTk
+from PIL import Image
 from pydub import AudioSegment
 import tomita.legacy.pysynth as synth
 from time import sleep
 
-from DynamicGUI import DynamicGUI
+from src.DynamicGUI import DynamicGUI
 
 working_folder_path = "files/working_folder"  # folder where some temporary things will be stored
 

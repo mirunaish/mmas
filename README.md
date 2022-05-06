@@ -17,7 +17,7 @@ A white R255 G255 B255 pixel will be 3 C8 notes of length 6; line breaks are res
 Gray-ish images tend to sound pretty bad with this conversion algorithm.
 
 Files:
-* stores temporary files in [working_folder](files/working_folder)
+* stores temporary files in [working_folder](res/working_folder)
 
 See also: [ImageToMp3](https://github.com/mirunaish/image-to-mp3)
 
@@ -26,7 +26,7 @@ Turns an image into a String and saves it to a text document.
 
 Scales the image so that one pixel in the image maps to one 10x22 character, gets the value (*weight*) of the pixel, and
 picks a random character from the array of characters with that value, which is imported from
-[weights.txt](files/asciify/weights.txt). Appends this character to a string, then prints the string to a file.
+[weights.txt](res/asciify/weights.txt). Appends this character to a string, then prints the string to a file.
 
 Despite the name, the characters are Unicode. The range of values in normal ASCII characters is pretty narrow, but
 unicode has more range of values and therefore results in a prettier final image. But many characters in unicode are
@@ -109,8 +109,16 @@ The individual character blacklist and whitelist were created manually by lookin
 * [tomita pysynth](https://mdoege.github.io/PySynth/)
 * must have [ffmpeg](https://ffmpeg.org/download.html) installed and on the path
 
+## Running
+Running is more problematic than it initially seems. The problem is that double-clicking on the .py file, running
+`python program.py`, and running `program.py` might all use different versions of python, and it is not always clear
+which command should be used to get to the python version which has the required site packages installed. For this
+reason I recommend editing the path environment variable to include the path to a python 3.9 executable and renaming
+the executable to python39.exe, and then running `python39 program.py` from the command line after `cd`-ing into the mmas
+folder.
+
 ## Instructions
-Run GUI.py to start the program. Pick a command from the command panel, enter the input required in the options panel,
+Pick a command from the command panel, enter the input required in the options panel,
 and click "convert".
 
 ## Sources

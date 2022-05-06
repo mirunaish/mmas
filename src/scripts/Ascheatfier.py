@@ -6,7 +6,7 @@ from tkinter import ttk
 import random
 import cv2
 from cv2 import VideoCapture, VideoWriter, VideoWriter_fourcc
-from DynamicGUI import DynamicGUI
+from src.DynamicGUI import DynamicGUI
 from PIL import Image, ImageChops, ImageDraw, ImageFont
 import ffmpeg
 from numpy import array

@@ -1,9 +1,9 @@
 from tkinter import ttk
 from tkinter import *
-from DynamicGUI import DynamicGUI
-from scripts.Ascheatfier import Ascheatfier
-from scripts.Asciifier import Asciifier
-from scripts.ImageToMP3 import ImageToMP3
+from src.DynamicGUI import DynamicGUI
+from src.scripts import Ascheatfier
+from src.scripts import Asciifier
+from src.scripts import ImageToMP3
 
 # Handles the main, mostly static elements of the GUI: the side panel and the options panel
 # The main GUI creates the dynamic GUI which contains the preview notebook and the status bar
