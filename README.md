@@ -1,8 +1,8 @@
 # MMAS
-MultiMedia Art Station
+Mozzarella's Multimedia Art Station
 
 ## Instructions
-Pick a command from the command panel, enter the input required in the options panel,
+Pick a command from the command panel, enter the inputs required in the options panel,
 and click "convert".
 
 ## Scripts
@@ -108,8 +108,8 @@ Running is more problematic than it initially seems. The problem is that double-
 `python program.py`, and running `program.py` might all use different versions of python, and it is not always clear
 which command should be used to get to the python version which has the required site packages installed. For this
 reason I recommend editing the path environment variable to include the path to a python 3.9 executable and renaming
-the executable to python39.exe, and then running `python39 program.py` from the command line after `cd`-ing into the mmas
-folder. Before the program can be run, requirements must be installed.
+the executable to python39.exe, and then running `python39 program.py` from the command line after `cd`-ing into the
+mmas folder. Before the program can be run, requirements must be installed.
 
 ### Libraries / dependencies
 * tkinter
