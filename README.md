@@ -1,6 +1,10 @@
 # MMAS
 MultiMedia Art Station
 
+## Instructions
+Pick a command from the command panel, enter the input required in the options panel,
+and click "convert".
+
 ## Scripts
 
 ### Image to MP3
@@ -18,8 +22,6 @@ Gray-ish images tend to sound pretty bad with this conversion algorithm.
 
 Files:
 * stores temporary files in [working_folder](res/working_folder)
-
-See also: [ImageToMp3](https://github.com/mirunaish/image-to-mp3)
 
 ### Asciify
 Turns an image into a String and saves it to a text document.
@@ -107,11 +109,7 @@ Running is more problematic than it initially seems. The problem is that double-
 which command should be used to get to the python version which has the required site packages installed. For this
 reason I recommend editing the path environment variable to include the path to a python 3.9 executable and renaming
 the executable to python39.exe, and then running `python39 program.py` from the command line after `cd`-ing into the mmas
-folder.
-
-## Instructions
-Pick a command from the command panel, enter the input required in the options panel,
-and click "convert".
+folder. Before the program can be run, requirements must be installed.
 
 ### Libraries / dependencies
 * tkinter
@@ -133,6 +131,3 @@ and click "convert".
   * others
 * https://www.unicode.org/reports/tr44/#General_Category_Values
 * A [CodeProject article](https://www.codeproject.com/Articles/1179876/Unicode-Art) about ascii images
-* [ImageToMp3](https://github.com/mirunaish/image-to-mp3), submitted last application cycle
-* CS10 (multithreading, resource locking)
-* Suggestions made by my IDE (Pycharm)
