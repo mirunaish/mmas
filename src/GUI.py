@@ -1,9 +1,10 @@
+from enum import Enum
 from tkinter import ttk
 from tkinter import *
 from src.DynamicGUI import DynamicGUI
 from src.scripts.Ascheatfier import Ascheatfier
 from src.scripts.Asciifier import Asciifier
-from src.scripts.GANImage import Datasets, GANImage
+from src.scripts.GAN import Datasets, GAN
 from src.scripts.ImageToMP3 import ImageToMP3
 
 # Handles the main, mostly static elements of the GUI: the side panel and the options panel
@@ -42,11 +43,19 @@ ttk.Separator(master=root, orient="vertical").grid(row=0, column=1, sticky="ns")
 ttk.Separator(master=root, orient="vertical").grid(row=0, column=3, sticky="ns")
 ttk.Separator(master=root, orient="horizontal").grid(row=1, column=0, columnspan=5, sticky="ew")
 
+
 # create command buttons in side panel
-commands = ["image to mp3", "asciify", "as-cheat-fy", "gan image"]
-for i in range(len(commands)):
-    comm = commands[i]
-    ttk.Button(master=side_panel, text=comm, command=lambda comm=comm: on_click_command(comm)).grid(row=i, column=0, sticky="ew")
+class Scripts(Enum):
+    IMAGE_TO_MP3 = "image to mp3"
+    ASCIIFY = "asciify"
+    ASCHEATFY = "as-cheat-fy"
+    GAN = "gan"
+
+
+i = 0
+for script in [e.value for e in Scripts]:
+    ttk.Button(master=side_panel, text=script, command=lambda comm=script: on_click_command(comm)).grid(row=i, column=0, sticky="ew")
+    i += 1
 
 gui = DynamicGUI(root)
 
@@ -127,9 +136,6 @@ def config_gan_image():
     ttk.Label(master=options_panel, text="path to destination directory: ").grid(row=2, column=0, sticky="nw")
     output_dir_path = ttk.Entry(master=options_panel, exportselection=0)
     output_dir_path.grid(row=3, column=0, sticky="nw")
-    output_format = IntVar()
-    Radiobutton(master=options_panel, text="image", variable=output_format, value=0).grid(row=5, column=0, sticky="nw")
-    Radiobutton(master=options_panel, text="video", variable=output_format, value=1).grid(row=6, column=0, sticky="nw")
     choices = [e.value for e in Datasets]
     dataset = StringVar(root)
     ttk.OptionMenu(options_panel, dataset, choices[0], *choices).grid(row=7, column=0, sticky="nw")
@@ -137,20 +143,20 @@ def config_gan_image():
 
     # button's on_click function
     def on_click_submit():
-        GANImage(gui, dataset=dataset.get(), input_path=image_path_entry.get(), output_dir_path=output_dir_path.get(), type=output_format.get())
+        GAN(gui, dataset=dataset.get(), input_path=image_path_entry.get(), output_path=output_dir_path.get())
 
 
 # onclick function of all command buttons in side panel
 def on_click_command(button):
     gui.clear_status()
     clear_options_panel()
-    if button == "image to mp3":
+    if button == Scripts.IMAGE_TO_MP3.value:
         config_image_to_mp3()
-    elif button == "asciify":
+    elif button == Scripts.ASCIIFY.value:
         config_asciify()
-    elif button == "as-cheat-fy":
+    elif button == Scripts.ASCHEATFY.value:
         config_ascheatfy()
-    elif button == "gan image":
+    elif button == Scripts.GAN.value:
         config_gan_image()
 
 
