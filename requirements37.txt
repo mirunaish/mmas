@@ -1,0 +1,12 @@
+numpy~=1.19.5
+matplotlib~=3.3.4
+pillow~=8.4.0
+fonttools~=4.26.2
+future~=0.17.1
+pydub~=0.23.1
+opencv-python~=4.5.4.60
+ffmpeg~=1.4
+tomita~=0.2.0
+tensorflow_gpu==1.14.0
+torch~=1.11.0
+torchvision~=0.12.0

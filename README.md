@@ -105,11 +105,19 @@ The individual character blacklist and whitelist were created manually by lookin
 
 ## Running
 Running is more problematic than it initially seems. The problem is that double-clicking on the .py file, running
-`python program.py`, and running `program.py` might all use different versions of python, and it is not always clear
-which command should be used to get to the python version which has the required site packages installed. For this
-reason I recommend editing the path environment variable to include the path to a python 3.9 executable and renaming
-the executable to python39.exe, and then running `python39 program.py` from the command line after `cd`-ing into the
-mmas folder. Before the program can be run, requirements must be installed.
+`python program.py`, and running `program.py` might all use different versions of Python, and it is not always clear
+which command should be used to get to the Python version which has the required site packages installed. For this
+reason I recommend editing the PATH environment variable to include the path to a Python 3.7 executable and creating a
+copy of the `python.exe` file named `python37.exe`, and then running `python37 program.py` from the command line after
+`cd`-ing into the `mmas` folder. Alternatively, the full path of the python executable can be specified.
+
+Make sure to install dependencies before running.
+
+To use the GAN script Python 3.7 must be used, and additional dependencies installed. If using a newer version of
+Python, the GAN script will not be functional. Use the version of `requirements.txt` corresponding to the version of
+Python you are using.
+
+Running the GAN script for the first time will take a long time
 
 ### Libraries / dependencies
 * tkinter
@@ -117,8 +125,17 @@ mmas folder. Before the program can be run, requirements must be installed.
 * cv2
 * pydub
 * [tomita pysynth](https://mdoege.github.io/PySynth/)
-* must have [ffmpeg](https://ffmpeg.org/download.html) installed and on the path
-* run `pip install -r requirements.txt` to install requirements
+* [ffmpeg](https://ffmpeg.org/download.html) must be installed and on the PATH
+* GAN dependencies:
+  * [CUDA development toolkit 10.0](https://developer.nvidia.com/cuda-10.0-download-archive) (only CUDA.Runtime,
+CUDA.Development.Compiler.nvcc, and drivers are required). Make sure the `nvcc` executable is on the PATH. Other
+versions of CUDA will not work.
+  * cuDNN 7.5
+  * [Microsoft Visual Studio 2017](https://my.visualstudio.com/Downloads?q=Visual%20Studio%202017) with the C++ option
+  * dnnlib: clone [this repo](https://github.com/NVlabs/stylegan2) and copy dnnlib into python 3.7 site-packages folder
+  * you may need to change `compiler_bindir_search_path` in `dnnlib\tflib\custom_ops.py`
+* run `python37 -m pip install -r requirements37.txt` or `python310 -m pip install -r requirements310.txt` to install
+requirements.
 
 ## Sources
 * Documentation
@@ -131,3 +148,5 @@ mmas folder. Before the program can be run, requirements must be installed.
   * others
 * https://www.unicode.org/reports/tr44/#General_Category_Values
 * A [CodeProject article](https://www.codeproject.com/Articles/1179876/Unicode-Art) about ascii images
+* NVIDIA stylegan2 code
+  * https://github.com/NVlabs/stylegan2/blob/master/pretrained_networks.py

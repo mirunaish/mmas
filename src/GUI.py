@@ -3,6 +3,7 @@ from tkinter import *
 from src.DynamicGUI import DynamicGUI
 from src.scripts.Ascheatfier import Ascheatfier
 from src.scripts.Asciifier import Asciifier
+from src.scripts.GANImage import Datasets, GANImage
 from src.scripts.ImageToMP3 import ImageToMP3
 
 # Handles the main, mostly static elements of the GUI: the side panel and the options panel
@@ -42,7 +43,7 @@ ttk.Separator(master=root, orient="vertical").grid(row=0, column=3, sticky="ns")
 ttk.Separator(master=root, orient="horizontal").grid(row=1, column=0, columnspan=5, sticky="ew")
 
 # create command buttons in side panel
-commands = ["image to mp3", "asciify", "as-cheat-fy"]
+commands = ["image to mp3", "asciify", "as-cheat-fy", "gan image"]
 for i in range(len(commands)):
     comm = commands[i]
     ttk.Button(master=side_panel, text=comm, command=lambda comm=comm: on_click_command(comm)).grid(row=i, column=0, sticky="ew")
@@ -118,6 +119,27 @@ def config_ascheatfy():
         Ascheatfier(gui, image_path_entry.get(), ascii_path_entry.get(), resolution=resolution.get(), static=(static.get() == 1), white_on_black=(color.get() == 1))
 
 
+# config options panel for gan image
+def config_gan_image():
+    ttk.Label(master=options_panel, text="path to image (png)\n or video (gif / mp4): ").grid(row=0, column=0, sticky="nw")
+    image_path_entry = ttk.Entry(master=options_panel, exportselection=0)
+    image_path_entry.grid(row=1, column=0, sticky="nw")
+    ttk.Label(master=options_panel, text="path to destination directory: ").grid(row=2, column=0, sticky="nw")
+    output_dir_path = ttk.Entry(master=options_panel, exportselection=0)
+    output_dir_path.grid(row=3, column=0, sticky="nw")
+    output_format = IntVar()
+    Radiobutton(master=options_panel, text="image", variable=output_format, value=0).grid(row=5, column=0, sticky="nw")
+    Radiobutton(master=options_panel, text="video", variable=output_format, value=1).grid(row=6, column=0, sticky="nw")
+    choices = [e.value for e in Datasets]
+    dataset = StringVar(root)
+    ttk.OptionMenu(options_panel, dataset, choices[0], *choices).grid(row=7, column=0, sticky="nw")
+    ttk.Button(master=options_panel, command=lambda: on_click_submit(), text="generate").grid(row=8, column=0, sticky="nw")
+
+    # button's on_click function
+    def on_click_submit():
+        GANImage(gui, dataset=dataset.get(), input_path=image_path_entry.get(), output_dir_path=output_dir_path.get(), type=output_format.get())
+
+
 # onclick function of all command buttons in side panel
 def on_click_command(button):
     gui.clear_status()
@@ -128,6 +150,8 @@ def on_click_command(button):
         config_asciify()
     elif button == "as-cheat-fy":
         config_ascheatfy()
+    elif button == "gan image":
+        config_gan_image()
 
 
 root.mainloop()

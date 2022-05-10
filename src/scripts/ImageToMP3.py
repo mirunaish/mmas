@@ -17,7 +17,7 @@ class ImageToMP3(threading.Thread):
     def __init__(self, gui, image_path, dest_dir_path):
         super().__init__(daemon=True)  # will continue to run even if main window is closed
 
-        self.command = "ImageToMP3"  # will appear in the preview window tab
+        self.command = "Image to MP3"  # will appear in the preview window tab
 
         # if path was given with slashes, convert to backslash path
         self.image_path = image_path.replace('/', '\\')   # the image to be transformed
