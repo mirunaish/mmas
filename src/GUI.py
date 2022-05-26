@@ -2,9 +2,11 @@ from enum import Enum
 from tkinter import ttk
 from tkinter import *
 from src.DynamicGUI import DynamicGUI
-from src.scripts.Ascheatfier import Ascheatfier
-from src.scripts.Asciifier import Asciifier
-from src.scripts.GAN import Datasets, GAN
+from src.globals import Globals
+from src.scripts.Ascheatfier import Ascheatfier, Resolution as AscheatResolution
+from src.scripts.Asciifier import Asciifier, Resolution as AsciiResolution
+from src.scripts.GANImage import Datasets as ImDatasets, GANImage
+from src.scripts.GANVideo import Speed, Datasets as VidDatasets, GANVideo, TransitionTypes
 from src.scripts.ImageToMP3 import ImageToMP3
 
 # Handles the main, mostly static elements of the GUI: the side panel and the options panel
@@ -49,7 +51,8 @@ class Scripts(Enum):
     IMAGE_TO_MP3 = "image to mp3"
     ASCIIFY = "asciify"
     ASCHEATFY = "as-cheat-fy"
-    GAN = "gan"
+    GAN_IMAGE = "gan image"
+    GAN_VIDEO = "gan video"
 
 
 i = 0
@@ -144,7 +147,35 @@ def config_gan_image():
 
     # button's on_click function
     def on_click_submit():
-        GAN(gui, dataset=dataset.get(), input_path=image_path_entry.get(), output_path=output_dir_path.get())
+        GANImage(dataset=dataset.get(), input_path=image_path_entry.get(), output_path=output_dir_path.get())
+
+
+# config options panel for gan video
+def config_gan_video():
+    ttk.Label(master=options_panel, text="path to video (gif or mp4): ").grid(row=0, column=0, sticky="nw")
+    image_path_entry = ttk.Entry(master=options_panel, exportselection=0)
+    image_path_entry.grid(row=1, column=0, sticky="nw")
+    ttk.Label(master=options_panel, text="path to destination directory: ").grid(row=2, column=0, sticky="nw")
+    output_dir_path = ttk.Entry(master=options_panel, exportselection=0)
+    output_dir_path.grid(row=3, column=0, sticky="nw")
+    ttk.Label(master=options_panel, text="duration in minutes: ").grid(row=4, column=0, sticky="nw")
+    duration_entry = ttk.Entry(master=options_panel, exportselection=0)
+    duration_entry.grid(row=5, column=0, sticky="nw")
+    dataset_choices = VidDatasets.get_option_names()
+    dataset = StringVar(root)
+    ttk.OptionMenu(options_panel, dataset, dataset_choices[0], *dataset_choices).grid(row=6, column=0, sticky="nw")
+    speed_choices = Speed.get_option_names()
+    speed = StringVar(root)
+    ttk.OptionMenu(options_panel, speed, speed_choices[0], *speed_choices).grid(row=7, column=0, sticky="nw")
+    transition_choices = TransitionTypes.get_option_names()
+    transition = StringVar(root)
+    ttk.OptionMenu(options_panel, transition, transition_choices[0], *transition_choices).grid(row=8, column=0, sticky="nw")
+    ttk.Button(master=options_panel, command=lambda: on_click_submit(), text="generate").grid(row=9, column=0, sticky="nw")
+
+    # button's on_click function
+    def on_click_submit():
+        GANVideo(dataset=dataset.get(), input_path=image_path_entry.get(), output_path=output_dir_path.get(),
+                 duration=duration_entry.get(), speed=speed.get(), transition_type=transition.get())
 
 
 # onclick function of all command buttons in side panel
@@ -159,6 +190,8 @@ def on_click_command(button):
         config_ascheatfy()
     elif button == Scripts.GAN.value:
         config_gan_image()
+    elif button == Scripts.GAN_VIDEO.value:
+        config_gan_video()
 
 
 root.mainloop()
