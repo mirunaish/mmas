@@ -1,25 +1,36 @@
 import threading
 from time import sleep
 from src.File import File
-from src.exceptions import FileLockedError
+from src.exceptions import IncorrectFileType
+from src.globals import Globals
+
+
+class OptionList:
+    def __init__(self, options):
+        self.options = options
+
+    def get_option_names(self):
+        return list(self.options.keys())
+
+    def get_option_value(self, name):
+        return self.options[name]
 
 
 class Script(threading.Thread):
 
     # create a new Script object
-    def __init__(self, gui, input_path=None, output_path=None):
+    def __init__(self, input_path=None, output_path=None):
         super().__init__(daemon=True)  # will continue to run even if main window is closed
 
-        self.gui = gui
         self.preview = None  # the preview window i will put my preview image/text/etc in
 
         self.input_file = None
-        if input_path is not None:
-            self.input_file = File(input_path, self.gui)
+        if input_path != "":
+            self.input_file = File(input_path)
 
         self.output_file = None
-        if output_path is not None:
-            self.output_file = File(output_path, self.gui)
+        if output_path != "":
+            self.output_file = File(output_path)
 
         # to be overridden by children
         self._script_name = "none"
@@ -33,15 +44,15 @@ class Script(threading.Thread):
             try:
                 self.input_file.config_input(self._input_types)
             except FileNotFoundError:
-                self.gui.update_status("the specified input file does not exist.", err=True)
-                return
+                Globals.gui.update_status("the specified input file does not exist.", err=True)
+                raise ValueError
+            except IncorrectFileType:
+                Globals.gui.update_status("the specified input file is of incorrect type.", err=True)
+                raise ValueError
 
-            # try to acquire lock on file
-            try:
-                self.input_file.acquire_lock()
-            except FileLockedError:
-                self.gui.update_status("this input file is currently in use.", err=True)
-                return
+            if self.input_file.is_locked():
+                Globals.gui.update_status("this input file is currently in use.", err=True)
+                raise ValueError
 
         # if set to match input, match input
         if self._output_type == File.Types.MATCH_INPUT:
@@ -54,19 +65,28 @@ class Script(threading.Thread):
             try:
                 self.output_file.config_output(file_name, self._output_type)
             except FileNotFoundError:
-                self.gui.update_status("destination folder does not exist.", err=True)
-                return
+                Globals.gui.update_status("destination folder does not exist.", err=True)
+                raise ValueError
 
-            # try to acquire lock on file
-            try:
-                self.output_file.acquire_lock()
-            except FileLockedError:
-                self.gui.update_status("this input file is currently in use.", err=True)
-                return
+            if self.output_file.is_locked():
+                Globals.gui.update_status("this output file is currently in use.", err=True)
+                raise ValueError
+
+        # acquire locks
+        if self.input_file is not None:
+            self.input_file.acquire_lock()
+        if self.output_file is not None:
+            self.output_file.acquire_lock()
+
+    # can be overridden by children
+    def validate_arguments(self):
+        pass
 
     def unconfig_io(self):
-        self.input_file.release_lock()
-        self.output_file.release_lock()
+        if self.input_file is not None:
+            self.input_file.release_lock()
+        if self.output_file is not None:
+            self.output_file.release_lock()
 
     # actual task to be done. to be overridden by children
     def convert(self):
@@ -78,10 +98,16 @@ class Script(threading.Thread):
 
     def run(self):
         # configure input and output files
-        self.config_io()
+        try:
+            self.config_io()
+            self.validate_arguments()
+        except ValueError:
+            return
 
         # create preview window
-        self.preview = self.gui.new_tab(self._script_name, file=self.input_file.file_name)
+        self.preview = Globals.gui.new_tab(self._script_name, file=self.input_file.file_name)
+        self.preview.progress_update(0)
+        self.preview.progress_status("loading...")
         self.config_preview()
 
         self.convert()
@@ -91,4 +117,4 @@ class Script(threading.Thread):
 
         # wait for a bit before making preview tab disappear
         sleep(5)
-        self.gui.remove_tab(self.preview.name)
+        Globals.gui.remove_tab(self.preview.name)

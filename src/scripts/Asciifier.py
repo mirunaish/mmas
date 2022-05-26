@@ -1,22 +1,21 @@
 import random
-from enum import Enum
-
 from PIL import Image, ImageChops
 
 from src.File import File
-from src.Script import Script
+from src.Script import Script, OptionList
 
 
-class Resolution(Enum):
-    SMALL = 50
-    MEDIUM = 100
-    BIG = 500
+Resolution = OptionList({
+    "small (50)": 50,
+    "medium (150)": 150,
+    "big (300)": 300
+})
 
 
 # given an image turn it into a string
 class Asciifier(Script):
-    def __init__(self, gui, input_path, output_path, resolution, static, white_on_black):
-        super().__init__(gui, input_path, output_path)
+    def __init__(self, input_path, output_path, resolution, static, white_on_black):
+        super().__init__(input_path, output_path)
 
         self._script_name = "Asciify"
         self._input_types = [File.Types.PNG]
@@ -24,7 +23,7 @@ class Asciifier(Script):
 
         self.static = static
         self.white_on_black = white_on_black
-        self.resolution = resolution
+        self.resolution = Resolution.get_option_value(resolution)
 
         self.weights = []
 
@@ -131,8 +130,7 @@ class Asciifier(Script):
         return unicode
 
     def convert(self):
-        self.preview.put_image(self.input_file.get_full_path())
-        self.preview.progress_amount(0)
+        self.preview.put_image(image_path=self.input_file.get_full_path())
 
         self.preview.progress_update("preparing weights...")
         # prepare character list

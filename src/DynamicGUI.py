@@ -56,7 +56,7 @@ class PreviewWindow:
         self.progress_bar.configure(value=amount)
 
     # put an image in the main label. can use either image or image_path but not both
-    def put_image(self, image, image_path):
+    def put_image(self, image=None, image_path=None):
         if image is not None:
             image = self.resize(image)
         elif image_path is not None:
@@ -96,34 +96,10 @@ class DynamicGUI:
         self.status_message.grid(column=0, row=0, sticky="w")
 
         self.tabs = {}  # dictionary
-        self.files = set()
 
         # all threads share the same DynamicGUI instance
-        self.file_lock = threading.Lock()  # only one thread can access the file set at the same time
         self.tab_lock = threading.Lock()  # only one thread can access the tab dictionary at the same time
         self.status_waiting_threads = set()  # threads waiting to clear status. when one is added the others are removed
-
-    # return true if file is currently locked by another thread
-    def file_locked(self, file):
-        self.file_lock.acquire(blocking=True)
-        value = file in self.files
-        self.file_lock.release()
-        return value
-
-    # add file to set of files currently in use
-    def lock_file(self, file):
-        if self.file_locked(file):
-            raise FileLockedError
-
-        self.file_lock.acquire(blocking=True)
-        self.files.add(file)
-        self.file_lock.release()
-
-    # add file to set of files currently in use
-    def unlock_file(self, file):
-        self.file_lock.acquire(blocking=True)
-        self.files.remove(file)
-        self.file_lock.release()
 
     # create a new preview tab
     def new_tab(self, script, file):

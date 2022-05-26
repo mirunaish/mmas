@@ -1,5 +1,4 @@
 import pickle
-from enum import Enum
 import PIL
 import dnnlib
 import dnnlib.tflib as tflib
@@ -8,35 +7,36 @@ from torchvision import transforms
 import numpy as np
 
 from src.File import File
-from src.Script import Script
+from src.Script import Script, OptionList
 
 models_path = "res/gan/models/"
 
 
-class Datasets(Enum):
-    CATS = "cats"
-    FLOWERS = "flowers"
-    POKEMON = "pokemon"
-    ANIME = "anime"
-    MICROSCOPE = "microscope"
-    TEXTURES = "textures"
-    ABSTRACT1 = "abstract art 1"
-    ABSTRACT2 = "abstract art 2"
-    FIGURE = "figure drawings"
-    MODEL = "model.ckpt-533504"
-    NETWORK = "network-snapshot-026392"
+Datasets = OptionList({
+    "cats": "cats",
+    "flowers": "flowers",
+    "pokemon": "pokemon",
+    "anime": "anime",
+    "microscope": "microscope",
+    "textures": "textures",
+    "abstract art 1": "abstract art 1",
+    "abstract art 2": "abstract art 2",
+    "figure drawings": "figure drawings",
+    "model.ckpt-533504": "model.ckpt-533504",
+    "network-snapshot-026392": "network-snapshot-026392"
+})
 
 
-class GAN(Script):
+class GANImage(Script):
 
-    def __init__(self, gui, dataset, input_path, output_path):
-        super().__init__(gui, input_path, output_path)
+    def __init__(self, dataset, input_path, output_path):
+        super().__init__(input_path, output_path)
 
-        self.dataset = dataset
+        self.dataset = Datasets.get_option_value(dataset)
 
         self._script_name = "GAN"
-        self._input_types = [File.Types.PNG, File.Types.MP4, File.Types.GIF]
-        self._output_type = File.Types.MATCH_INPUT
+        self._input_types = File.Types.PNG
+        self._output_type = File.Types.PNG
 
         # start thread
         self.start()
@@ -62,12 +62,8 @@ class GAN(Script):
 
     def convert(self):
         # create tensorflow session in preparation for unpickling model
-        self.preview.progress_amount(0)
         self.preview.progress_update("starting tensorflow session...")
-        try:
-            dnnlib.tflib.init_tf()
-        except AssertionError:
-            pass
+        session = dnnlib.tflib.init_tf()
         self.preview.progress_amount(10)
 
         # load model
@@ -105,4 +101,5 @@ class GAN(Script):
         output_image.save(self.output_file.get_full_path())
         self.preview.progress_amount(100)
 
+        session.close()
         self.preview.progress_update("done.")

@@ -1,4 +1,3 @@
-from enum import Enum
 import random
 import cv2
 from cv2 import VideoCapture, VideoWriter, VideoWriter_fourcc
@@ -7,24 +6,23 @@ import ffmpeg
 from numpy import array
 
 from src.File import File
-from src.Script import Script
+from src.Script import Script, OptionList
+from src.globals import Globals
 
 W, H = (11, 18)  # width and height of one character
 font = ImageFont.truetype("DejaVuSansMono-Bold.ttf", 18, encoding='utf-8')
 
-working_folder_path = "res\\working_folder"  # temporarily store video
-
-
-class Resolution(Enum):
-    SMALL = 50
-    MEDIUM = 100
-    BIG = 500
+Resolution = OptionList({
+    "small (50)": 50,
+    "medium (150)": 150,
+    "big (300)": 300
+})
 
 
 # transforms image into image of characters
 class Ascheatfier(Script):
-    def __init__(self, gui, input_path, output_path, resolution, static, white_on_black):
-        super().__init__(gui, input_path, output_path)
+    def __init__(self, input_path, output_path, resolution, static, white_on_black):
+        super().__init__(input_path, output_path)
 
         self._script_name = "Ascheatfy"
         self._input_types = [File.Types.PNG, File.Types.MP4]  # allowed input types
@@ -32,7 +30,7 @@ class Ascheatfier(Script):
 
         self.static = static
         self.white_on_black = white_on_black
-        self.resolution = resolution
+        self.resolution = Resolution.get_option_value(resolution)
 
         self.char_images = {}
 
@@ -173,7 +171,7 @@ class Ascheatfier(Script):
         w, h = image.size
         result = Image.new("RGBA", (w * W, h * H), "black" if self.white_on_black else "white")
         if not silent:
-            self.preview.put_image(result)
+            self.preview.put_image(image=result)
 
         # the first version of asciify was meant for viewing in dark mode (white text on black background)
         # by default lighter pixels become denser characters
@@ -190,7 +188,7 @@ class Ascheatfier(Script):
                 char_img = self.char_images.get(weight).get(random.choice(list(self.char_images.get(weight).keys())))
                 result.alpha_composite(char_img, dest=(wi * W, hi * H))
             if not silent:
-                self.preview.put_image(result)
+                self.preview.put_image(image=result)
                 self.preview.progress_amount(90 * hi / h)
 
         return result
@@ -199,7 +197,7 @@ class Ascheatfier(Script):
     def convert_mp4(self):
         self.preview.progress_update("processing video...")
         video = VideoCapture(self.input_file.get_full_path())
-        result = VideoWriter(working_folder_path + "\\video.mp4",
+        result = VideoWriter(Globals.working_folder_path + "\\video.mp4",
                              VideoWriter_fourcc('m', 'p', '4', 'v'), video.get(cv2.CAP_PROP_FPS),
                              self.get_resized_size((int(video.get(cv2.CAP_PROP_FRAME_WIDTH)),
                                                    int(video.get(cv2.CAP_PROP_FRAME_HEIGHT)))))
@@ -215,7 +213,7 @@ class Ascheatfier(Script):
                 frame_image = Image.fromarray(cv2.cvtColor(cv2_im, cv2.COLOR_BGR2RGB))
 
                 asciified = self.asciify(frame_image.convert("RGB"), silent=True)  # tell method not to update preview
-                self.preview.put_image(asciified)
+                self.preview.put_image(image=asciified)
 
                 # convert back from pillow image to numpy array
                 frame_array = cv2.cvtColor(array(asciified), cv2.COLOR_RGB2BGR)
@@ -233,7 +231,7 @@ class Ascheatfier(Script):
         # add the audio
         self.preview.progress_update("processing audio...")
         audio = ffmpeg.input(self.input_file.get_full_path()).audio
-        video = ffmpeg.input(working_folder_path+"\\video.mp4").video
+        video = ffmpeg.input(Globals.working_folder_path+"\\video.mp4").video
         ffmpeg.output(audio, video, self.output_file.get_full_path())\
             .overwrite_output()\
             .run(quiet=True)
@@ -261,7 +259,7 @@ class Ascheatfier(Script):
             while 1:
                 asciified = self.asciify(frame.convert("RGB"), silent=True)  # tell method not to update preview
                 result_frames.append(asciified)
-                self.preview.put_image(asciified)
+                self.preview.put_image(image=asciified)
                 self.preview.progress_amount(10 + frame.tell() * 80 / frame_count)
                 frame.seek(frame.tell() + 1)
         except EOFError:
@@ -274,7 +272,7 @@ class Ascheatfier(Script):
     # ascheatfy a single image
     def convert_image(self):
         # preview is the original image
-        self.preview.put_image(self.input_file.get_full_path())
+        self.preview.put_image(image_path=self.input_file.get_full_path())
 
         image = Image.open(self.input_file.get_full_path()).convert("RGB")
 
@@ -289,9 +287,6 @@ class Ascheatfier(Script):
     def convert(self):
         # prepare character images
         self.generate_character_images()
-
-        self.preview.progress_amount(0)
-        self.preview.progress_update("loading...")
 
         if self.input_file.extension == File.Types.MP4:
             self.convert_mp4()

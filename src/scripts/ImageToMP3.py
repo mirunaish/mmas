@@ -5,14 +5,13 @@ import tomita.legacy.pysynth as synth
 
 from src.File import File
 from src.Script import Script
-
-working_folder_path = "res/working_folder"  # folder where some temporary things will be stored
+from src.globals import Globals
 
 
 class ImageToMP3(Script):
 
-    def __init__(self, gui, input_path, output_path):
-        super().__init__(gui, input_path, output_path)  # will continue to run even if main window is closed
+    def __init__(self, input_path, output_path):
+        super().__init__(input_path, output_path)
 
         self._script_name = "ImageToMP3"
         self._input_types = [File.Types.PNG]
@@ -30,7 +29,7 @@ class ImageToMP3(Script):
             new_x = max(int(x / div), 1)  # dimensions have to be at least 1
             new_y = max(int(y / div), 1)
             image = image.resize((new_x, new_y), resample=Image.LANCZOS)  # a slow but good resizing algorithm
-        image.save(working_folder_path + "/smallified.png")
+        image.save(Globals.working_folder_path + "/smallified.png")
         return image
 
     # converts the image to a tuple of note codes
@@ -75,26 +74,26 @@ class ImageToMP3(Script):
 
     @staticmethod
     def notes_to_wav(notes_sequence):
-        synth.make_wav(notes_sequence[0], fn=working_folder_path + "/temp.wav", silent=True)  # create wav
-        red = AudioSegment.from_file(working_folder_path + "/temp.wav")  # open wav with AudioSegment
+        wav_path = Globals.working_folder_path + "/temp.wav"
+        synth.make_wav(notes_sequence[0], fn=wav_path, silent=True)  # create wav
+        red = AudioSegment.from_file(wav_path)  # open wav with AudioSegment
         yield 1  # finished first channel
-        synth.make_wav(notes_sequence[1], fn=working_folder_path + "/temp.wav", silent=True)
-        green = AudioSegment.from_file(working_folder_path + "/temp.wav")
+        synth.make_wav(notes_sequence[1], fn=wav_path, silent=True)
+        green = AudioSegment.from_file(wav_path)
         yield 2  # second channel
-        synth.make_wav(notes_sequence[2], fn=working_folder_path + "/temp.wav", silent=True)
-        blue = AudioSegment.from_file(working_folder_path + "/temp.wav")
+        synth.make_wav(notes_sequence[2], fn=wav_path, silent=True)
+        blue = AudioSegment.from_file(wav_path)
         yield 3  # third
 
         combined = red.overlay(green)
         combined = combined.overlay(blue)
 
-        combined.export(working_folder_path + "/temp.wav", format='wav')
+        combined.export(wav_path, format='wav')
 
     # converts the wav to mp3
     @staticmethod
     def wav_to_mp3(output_path):
-        audio = AudioSegment.from_wav(working_folder_path + "\\temp.wav")
-        audio.export(output_path, format="mp3")  # the one-liner was too long
+        AudioSegment.from_wav(Globals.working_folder_path + "\\temp.wav").export(output_path, format="mp3")
 
     def convert(self):
         image = Image.open(self.input_file.get_full_path()).convert("RGB")

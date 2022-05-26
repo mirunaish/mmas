@@ -1,5 +1,5 @@
 from os.path import isdir
-
+from src.globals import Globals
 from src.exceptions import IncorrectFileType
 
 
@@ -18,6 +18,9 @@ class File:
 
     @staticmethod
     def uniformize_path(path):
+        # convert to all lowercase
+        path = path.lower()
+
         # if path was given with slashes, convert to backslash path
         path = path.replace('/', '\\')
 
@@ -35,14 +38,13 @@ class File:
         except FileNotFoundError:
             return False
 
-        return self.gui.file_locked(path)
+        return Globals.file_locked(path)
 
     # constructor takes a path. file must then be configured as either input or output
     # doing it this way because file must somehow save this path information in script constructor
     # way before config is called / validation starts
-    def __init__(self, path, gui):
+    def __init__(self, path):
         self.origin_path = self.uniformize_path(path)
-        self.gui = gui
         self.directory_path = None
         self.file_name = None
         self.extension = None
@@ -88,8 +90,11 @@ class File:
     def get_full_path(self):
         return self.directory_path + '\\' + self.file_name + '.' + self.extension
 
+    def is_locked(self):
+        return Globals.file_locked(self.get_full_path())
+
     def acquire_lock(self):
-        self.gui.lock_file(self.get_full_path())
+        Globals.lock_file(self.get_full_path())
 
     def release_lock(self):
-        self.gui.unlock_file(self.get_full_path())
+        Globals.unlock_file(self.get_full_path())
