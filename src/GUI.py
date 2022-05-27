@@ -1,9 +1,12 @@
+from enum import Enum
 from tkinter import ttk
 from tkinter import *
 from src.DynamicGUI import DynamicGUI
-from src.scripts.Ascheatfier import Ascheatfier
-from src.scripts.Asciifier import Asciifier
-from src.scripts.GANImage import Datasets, GANImage
+from src.globals import Globals
+from src.scripts.Ascheatfier import Ascheatfier, Resolution as AscheatResolution
+from src.scripts.Asciifier import Asciifier, Resolution as AsciiResolution
+from src.scripts.GANImage import Datasets as ImDatasets, GANImage
+from src.scripts.GANVideo import Speed, Datasets as VidDatasets, GANVideo, TransitionTypes
 from src.scripts.ImageToMP3 import ImageToMP3
 
 # Handles the main, mostly static elements of the GUI: the side panel and the options panel
@@ -42,13 +45,22 @@ ttk.Separator(master=root, orient="vertical").grid(row=0, column=1, sticky="ns")
 ttk.Separator(master=root, orient="vertical").grid(row=0, column=3, sticky="ns")
 ttk.Separator(master=root, orient="horizontal").grid(row=1, column=0, columnspan=5, sticky="ew")
 
-# create command buttons in side panel
-commands = ["image to mp3", "asciify", "as-cheat-fy", "gan image"]
-for i in range(len(commands)):
-    comm = commands[i]
-    ttk.Button(master=side_panel, text=comm, command=lambda comm=comm: on_click_command(comm)).grid(row=i, column=0, sticky="ew")
 
-gui = DynamicGUI(root)
+# create command buttons in side panel
+class Scripts(Enum):
+    IMAGE_TO_MP3 = "image to mp3"
+    ASCIIFY = "asciify"
+    ASCHEATFY = "as-cheat-fy"
+    GAN_IMAGE = "gan image"
+    GAN_VIDEO = "gan video"
+
+
+i = 0
+for script in [e.value for e in Scripts]:
+    ttk.Button(master=side_panel, text=script, command=lambda comm=script: on_click_command(comm)).grid(row=i, column=0, sticky="ew")
+    i += 1
+
+Globals.gui = DynamicGUI(root)
 
 
 # clear the options panel when a different command button is clicked
@@ -70,7 +82,7 @@ def config_image_to_mp3():
 
     # button's on_click function
     def on_click_submit():
-        ImageToMP3(gui, image_path_entry.get(), mp3_path_entry.get())
+        ImageToMP3(image_path_entry.get(), mp3_path_entry.get())
 
 
 # config options panel for asciifier
@@ -86,14 +98,14 @@ def config_asciify():
     color = IntVar()
     Radiobutton(master=options_panel, text="black on white", variable=color, value=0).grid(row=5, column=0, sticky="nw")
     Radiobutton(master=options_panel, text="white on black", variable=color, value=1).grid(row=6, column=0, sticky="nw")
-    choices = ['small (50)', 'medium (100)', 'big (500)']
+    choices = AsciiResolution.get_option_names()
     resolution = StringVar(root)
     ttk.OptionMenu(options_panel, resolution, choices[0], *choices).grid(row=7, column=0, sticky="nw")
     ttk.Button(master=options_panel, command=lambda: on_click_submit(), text="convert").grid(row=8, column=0, sticky="nw")
 
     # button's on_click function
     def on_click_submit():
-        Asciifier(gui, image_path_entry.get(), ascii_path_entry.get(), resolution=resolution.get(), static=(static.get() == 1), white_on_black=(color.get() == 1))
+        Asciifier(image_path_entry.get(), ascii_path_entry.get(), resolution=resolution.get(), static=(static.get() == 1), white_on_black=(color.get() == 1))
 
 
 # config options panel for ascheatfier
@@ -109,49 +121,77 @@ def config_ascheatfy():
     color = IntVar()
     Radiobutton(master=options_panel, text="black on white", variable=color, value=0).grid(row=5, column=0, sticky="nw")
     Radiobutton(master=options_panel, text="white on black", variable=color, value=1).grid(row=6, column=0, sticky="nw")
-    choices = ['small (50)', 'medium (150)', 'big (300)']
-    resolution = StringVar(root)
+    choices = AscheatResolution.get_option_names()
+    resolution = IntVar(root)
     ttk.OptionMenu(options_panel, resolution, choices[0], *choices).grid(row=7, column=0, sticky="nw")
     ttk.Button(master=options_panel, command=lambda: on_click_submit(), text="convert").grid(row=8, column=0, sticky="nw")
 
     # button's on_click function
     def on_click_submit():
-        Ascheatfier(gui, image_path_entry.get(), ascii_path_entry.get(), resolution=resolution.get(), static=(static.get() == 1), white_on_black=(color.get() == 1))
+        Ascheatfier(image_path_entry.get(), ascii_path_entry.get(), resolution=resolution.get(),
+                    static=(static.get() == 1), white_on_black=(color.get() == 1))
 
 
 # config options panel for gan image
 def config_gan_image():
-    ttk.Label(master=options_panel, text="path to image (png)\n or video (gif / mp4): ").grid(row=0, column=0, sticky="nw")
+    ttk.Label(master=options_panel, text="path to image (png): ").grid(row=0, column=0, sticky="nw")
     image_path_entry = ttk.Entry(master=options_panel, exportselection=0)
     image_path_entry.grid(row=1, column=0, sticky="nw")
     ttk.Label(master=options_panel, text="path to destination directory: ").grid(row=2, column=0, sticky="nw")
     output_dir_path = ttk.Entry(master=options_panel, exportselection=0)
     output_dir_path.grid(row=3, column=0, sticky="nw")
-    output_format = IntVar()
-    Radiobutton(master=options_panel, text="image", variable=output_format, value=0).grid(row=5, column=0, sticky="nw")
-    Radiobutton(master=options_panel, text="video", variable=output_format, value=1).grid(row=6, column=0, sticky="nw")
-    choices = [e.value for e in Datasets]
+    choices = ImDatasets.get_option_names()
     dataset = StringVar(root)
-    ttk.OptionMenu(options_panel, dataset, choices[0], *choices).grid(row=7, column=0, sticky="nw")
-    ttk.Button(master=options_panel, command=lambda: on_click_submit(), text="generate").grid(row=8, column=0, sticky="nw")
+    ttk.OptionMenu(options_panel, dataset, choices[0], *choices).grid(row=4, column=0, sticky="nw")
+    ttk.Button(master=options_panel, command=lambda: on_click_submit(), text="generate").grid(row=5, column=0, sticky="nw")
 
     # button's on_click function
     def on_click_submit():
-        GANImage(gui, dataset=dataset.get(), input_path=image_path_entry.get(), output_dir_path=output_dir_path.get(), type=output_format.get())
+        GANImage(dataset=dataset.get(), input_path=image_path_entry.get(), output_path=output_dir_path.get())
+
+
+# config options panel for gan video
+def config_gan_video():
+    ttk.Label(master=options_panel, text="path to video (gif or mp4): ").grid(row=0, column=0, sticky="nw")
+    image_path_entry = ttk.Entry(master=options_panel, exportselection=0)
+    image_path_entry.grid(row=1, column=0, sticky="nw")
+    ttk.Label(master=options_panel, text="path to destination directory: ").grid(row=2, column=0, sticky="nw")
+    output_dir_path = ttk.Entry(master=options_panel, exportselection=0)
+    output_dir_path.grid(row=3, column=0, sticky="nw")
+    ttk.Label(master=options_panel, text="duration in minutes: ").grid(row=4, column=0, sticky="nw")
+    duration_entry = ttk.Entry(master=options_panel, exportselection=0)
+    duration_entry.grid(row=5, column=0, sticky="nw")
+    dataset_choices = VidDatasets.get_option_names()
+    dataset = StringVar(root)
+    ttk.OptionMenu(options_panel, dataset, dataset_choices[0], *dataset_choices).grid(row=6, column=0, sticky="nw")
+    speed_choices = Speed.get_option_names()
+    speed = StringVar(root)
+    ttk.OptionMenu(options_panel, speed, speed_choices[0], *speed_choices).grid(row=7, column=0, sticky="nw")
+    transition_choices = TransitionTypes.get_option_names()
+    transition = StringVar(root)
+    ttk.OptionMenu(options_panel, transition, transition_choices[0], *transition_choices).grid(row=8, column=0, sticky="nw")
+    ttk.Button(master=options_panel, command=lambda: on_click_submit(), text="generate").grid(row=9, column=0, sticky="nw")
+
+    # button's on_click function
+    def on_click_submit():
+        GANVideo(dataset=dataset.get(), input_path=image_path_entry.get(), output_path=output_dir_path.get(),
+                 duration=duration_entry.get(), speed=speed.get(), transition_type=transition.get())
 
 
 # onclick function of all command buttons in side panel
 def on_click_command(button):
-    gui.clear_status()
+    Globals.gui.clear_status()
     clear_options_panel()
-    if button == "image to mp3":
+    if button == Scripts.IMAGE_TO_MP3.value:
         config_image_to_mp3()
-    elif button == "asciify":
+    elif button == Scripts.ASCIIFY.value:
         config_asciify()
-    elif button == "as-cheat-fy":
+    elif button == Scripts.ASCHEATFY.value:
         config_ascheatfy()
-    elif button == "gan image":
+    elif button == Scripts.GAN.value:
         config_gan_image()
+    elif button == Scripts.GAN_VIDEO.value:
+        config_gan_video()
 
 
 root.mainloop()
