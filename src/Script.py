@@ -25,11 +25,11 @@ class Script(threading.Thread):
         self.preview = None  # the preview window i will put my preview image/text/etc in
 
         self.input_file = None
-        if input_path != "":
+        if input_path is not None and input_path != "":
             self.input_file = File(input_path)
 
         self.output_file = None
-        if output_path != "":
+        if output_path is not None and output_path != "":
             self.output_file = File(output_path)
 
         # to be overridden by children
@@ -105,9 +105,9 @@ class Script(threading.Thread):
             return
 
         # create preview window
-        self.preview = Globals.gui.new_tab(self._script_name, file=self.input_file.file_name)
-        self.preview.progress_update(0)
-        self.preview.progress_status("loading...")
+        self.preview = Globals.gui.new_tab(self._script_name, file=self.output_file.file_name)
+        self.preview.progress_amount(0)
+        self.preview.progress_update("loading...")
         self.config_preview()
 
         self.convert()

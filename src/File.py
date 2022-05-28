@@ -36,9 +36,9 @@ class File:
             file = open(path, 'r')
             file.close()
         except FileNotFoundError:
-            return False
+            return Globals.file_locked(path)
 
-        return Globals.file_locked(path)
+        return True
 
     # constructor takes a path. file must then be configured as either input or output
     # doing it this way because file must somehow save this path information in script constructor

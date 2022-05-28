@@ -1,6 +1,5 @@
 import pickle
-import random
-
+import time
 import PIL
 import cv2
 import dnnlib
@@ -9,7 +8,7 @@ from PIL import Image
 from cv2 import VideoWriter, VideoWriter_fourcc
 from numpy import array
 from torchvision import transforms
-import numpy as np
+from numpy.random import RandomState
 import shutil
 
 from src.File import File
@@ -21,8 +20,8 @@ fps = 30
 
 Speeds = OptionList({
     "slow": 1,
-    "medium": 3,
-    "fast": 6
+    "medium": 2,
+    "fast": 4
 })
 
 
@@ -51,22 +50,32 @@ TransitionTypes = OptionList({
 
 class Model:
     def __init__(self, path):
+        self.generator = None
         self.shape = (0, 0)
         self.path = path
 
-    def get_size(self):
+        # set up some generation options
+        self.args = dnnlib.EasyDict()
+        self.args.output_transform = dict(func=tflib.convert_images_to_uint8, nchw_to_nhwc=True)
+        self.args.randomize_noise = False
+
+        self.random = RandomState(int(time.time()))
+
+    def get_input_shape(self):
         return self.shape
+
+    def get_output_size(self):
+        return 256, 256
 
     def load(self):
         with open(self.path, 'rb') as file:
-            G, D, Gs = pickle.load(file, encoding='latin1')
+            generator, discriminator, generator_s = pickle.load(file, encoding='latin1')
 
-        Gs_kwargs = dnnlib.EasyDict()
-        Gs_kwargs.output_transform = dict(func=tflib.convert_images_to_uint8, nchw_to_nhwc=True)
-        Gs_kwargs.randomize_noise = False
-        rnd = np.random.RandomState()
-        noise_vars = [var for name, var in Gs.components.synthesis.vars.items() if name.startswith('noise')]
-        tflib.set_vars({var: rnd.randn(*var.shape.as_list()) for var in noise_vars})  # [height, width]
+        self.generator = generator
+        self.shape = (1, *generator_s.input_shape[1:])
+
+    def get_random_input(self):
+        return self.random.randn(*self.get_input_shape())
 
 
 class GANVideo(Script):
@@ -94,44 +103,66 @@ class GANVideo(Script):
         try:
             self.duration = float(self.duration)
         except ValueError:
-            Globals.gui.status("duration must be numerical", err=True)
+            Globals.gui.update_status("duration must be numerical", err=True)
             raise ValueError
 
         # duration must be > 0
         # duration must be less than or equal to 10 minutes (for now)
         if self.duration <= 0:
-            Globals.gui.status("duration cannot be 0", err=True)
+            Globals.gui.update_status("duration cannot be 0", err=True)
             raise ValueError
         elif self.duration > 5:
-            Globals.gui.status("duration must be under 5 minutes", err=True)
+            Globals.gui.update_status("duration must be under 5 minutes", err=True)
             raise ValueError
 
+    def copy_last_input(self):
+        return self.inputs[len(self.inputs) - 1].copy()
+
     def generate_input(self):
-        # generate number of frames in this sequence
-        frames = int(fps / self.speed)  # how many frames to generate is determined by speed
+        # pick number of frames in this batch
+        frames = int(fps / self.speed) * 10
 
         # amount to increase or decrease by is determined by speed
-        delta = self.speed / 1000000000000000  # 1 / this number is the smallest possible value in python
+        delta = self.speed / 450
+
+        # if the input is empty, generate an initial frame
+        if not self.inputs:
+            self.inputs.append(self.model.get_random_input())
 
         if self.transition_type == TransitionTypes.get_option_value("random"):
             for i in range(frames):
-                # loop over all "pixels" and either increase or decrease by delta
-                self.inputs.append("")
+                new_input = self.copy_last_input()
+                # loop over all "pixels" and either increase by delta, decrease by delta, or do nothing
+                for j, pixel in enumerate(new_input):
+                    choice = self.model.random.randint(0, 3)
+                    if choice == 1:
+                        new_input[j] = pixel + delta
+                    elif choice == 2:
+                        new_input[j] = pixel - delta
+                self.inputs.append(new_input)
+
         elif self.transition_type == TransitionTypes.get_option_value("sequences"):
             original = self.inputs[len(self.inputs) - 1]
-            new = ""  # generate random input
+            goal = self.model.get_random_input()  # generate random input
             # transition smoothly from original to new
             for i in range(frames):
+                new_input = self.copy_last_input()
                 # increase each pixel by the initial difference divided by the number of frames
-                self.inputs.append("")
+                for j, pixel in enumerate(new_input[0]):
+                    new_input[0][j] += (goal[0][j] - original[0][j]) / frames
+                self.inputs.append(new_input)
+
         elif self.transition_type == TransitionTypes.get_option_value("constant"):
-            pass
+            for i in range(frames):
+                new_input = self.copy_last_input()
+                # loop over all "pixels" and increase by delta
+                for j, pixel in enumerate(new_input):
+                    new_input[j] = pixel + delta
+                self.inputs.append(new_input)
 
-        input_image = rnd.randn(1, *Gs.input_shape[1:])  # [minibatch, component]
-
-    def generate_frame(self):
+    def generate_frame(self, input_image):
         # pass input image through model
-        output = Gs.run(input_image, None, **Gs_kwargs)  # [minibatch, height, width, channel]
+        output = self.model.generator.run(input_image, None, **self.model.args)
         # get image from output
         output_image = PIL.Image.fromarray(output[0], 'RGB')
         return output_image
@@ -150,7 +181,7 @@ class GANVideo(Script):
 
         # prepare output
         result = VideoWriter(Globals.working_folder_path + "\\video.mp4",
-                             VideoWriter_fourcc('m', 'p', '4', 'v'), fps, self.model.get_size())
+                             VideoWriter_fourcc('m', 'p', '4', 'v'), fps, self.model.get_output_size())
 
         # keep generating until we reach desired length
         frames = 0
@@ -162,8 +193,7 @@ class GANVideo(Script):
                 self.generate_input()
                 self.preview.progress_update("generating frames...")
 
-            frame = self.generate_frame()
-            self.inputs.pop(0)  # remove first index
+            frame = self.generate_frame(self.inputs.pop(0))  # remove first input
 
             # write frame to output
             frame_array = cv2.cvtColor(array(frame), cv2.COLOR_RGB2BGR)
@@ -175,6 +205,8 @@ class GANVideo(Script):
                 self.preview.put_image(frame)
 
             frames += 1
+
+        result.release()
 
         # copy temporary file to destination folder
         self.preview.progress_update("saving image...")

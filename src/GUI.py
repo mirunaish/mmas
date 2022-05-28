@@ -6,7 +6,7 @@ from src.globals import Globals
 from src.scripts.Ascheatfier import Ascheatfier, Resolution as AscheatResolution
 from src.scripts.Asciifier import Asciifier, Resolution as AsciiResolution
 from src.scripts.GANImage import Datasets as ImDatasets, GANImage
-from src.scripts.GANVideo import Speed, Datasets as VidDatasets, GANVideo, TransitionTypes
+from src.scripts.GANVideo import Speeds, Datasets as VidDatasets, GANVideo, TransitionTypes
 from src.scripts.ImageToMP3 import ImageToMP3
 
 # Handles the main, mostly static elements of the GUI: the side panel and the options panel
@@ -153,8 +153,8 @@ def config_gan_image():
 # config options panel for gan video
 def config_gan_video():
     ttk.Label(master=options_panel, text="path to video (gif or mp4): ").grid(row=0, column=0, sticky="nw")
-    image_path_entry = ttk.Entry(master=options_panel, exportselection=0)
-    image_path_entry.grid(row=1, column=0, sticky="nw")
+    video_path_entry = ttk.Entry(master=options_panel, exportselection=0)
+    video_path_entry.grid(row=1, column=0, sticky="nw")
     ttk.Label(master=options_panel, text="path to destination directory: ").grid(row=2, column=0, sticky="nw")
     output_dir_path = ttk.Entry(master=options_panel, exportselection=0)
     output_dir_path.grid(row=3, column=0, sticky="nw")
@@ -164,7 +164,7 @@ def config_gan_video():
     dataset_choices = VidDatasets.get_option_names()
     dataset = StringVar(root)
     ttk.OptionMenu(options_panel, dataset, dataset_choices[0], *dataset_choices).grid(row=6, column=0, sticky="nw")
-    speed_choices = Speed.get_option_names()
+    speed_choices = Speeds.get_option_names()
     speed = StringVar(root)
     ttk.OptionMenu(options_panel, speed, speed_choices[0], *speed_choices).grid(row=7, column=0, sticky="nw")
     transition_choices = TransitionTypes.get_option_names()
@@ -174,7 +174,7 @@ def config_gan_video():
 
     # button's on_click function
     def on_click_submit():
-        GANVideo(dataset=dataset.get(), input_path=image_path_entry.get(), output_path=output_dir_path.get(),
+        GANVideo(dataset=dataset.get(), input_path=video_path_entry.get(), output_path=output_dir_path.get(),
                  duration=duration_entry.get(), speed=speed.get(), transition_type=transition.get())
 
 
@@ -188,7 +188,7 @@ def on_click_command(button):
         config_asciify()
     elif button == Scripts.ASCHEATFY.value:
         config_ascheatfy()
-    elif button == Scripts.GAN.value:
+    elif button == Scripts.GAN_IMAGE.value:
         config_gan_image()
     elif button == Scripts.GAN_VIDEO.value:
         config_gan_video()
