@@ -117,8 +117,6 @@ To use the GAN script Python 3.7 must be used, and additional dependencies insta
 Python, the GAN script will not be functional. Use the version of `requirements.txt` corresponding to the version of
 Python you are using.
 
-Running the GAN script for the first time will take a long time
-
 ### Libraries / dependencies
 * tkinter
 * pillow
@@ -150,3 +148,4 @@ requirements.
 * A [CodeProject article](https://www.codeproject.com/Articles/1179876/Unicode-Art) about ascii images
 * NVIDIA stylegan2 code
   * https://github.com/NVlabs/stylegan2/blob/master/pretrained_networks.py
+  * https://github.com/NVlabs/stylegan2/blob/master/training/training_loop.py
