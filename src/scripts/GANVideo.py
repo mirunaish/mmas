@@ -7,7 +7,6 @@ import dnnlib.tflib as tflib
 from PIL import Image
 from cv2 import VideoWriter, VideoWriter_fourcc
 from numpy import array
-from torchvision import transforms
 from numpy.random import RandomState
 import shutil
 
@@ -35,8 +34,9 @@ Datasets = OptionList({
     "abstract art 1": "abstract art 1",
     "abstract art 2": "abstract art 2",
     "figure drawings": "figure drawings",
-    "model.ckpt-533504": "model.ckpt-533504",
-    "network-snapshot-026392": "network-snapshot-026392"
+    "imageNET": "model.ckpt-533504",
+    "network-snapshot-026392": "network-snapshot-026392",
+    "mystery": "ffhq"
 })
 
 TransitionTypes = OptionList({
@@ -61,12 +61,6 @@ class Model:
 
         self.random = RandomState(int(time.time()))
 
-    def get_input_shape(self):
-        return self.shape
-
-    def get_output_size(self):
-        return 256, 256
-
     def load(self):
         with open(self.path, 'rb') as file:
             generator, discriminator, generator_s = pickle.load(file, encoding='latin1')
@@ -74,8 +68,23 @@ class Model:
         self.generator = generator
         self.shape = (1, *generator_s.input_shape[1:])
 
+    def get_input_shape(self):
+        return self.shape
+
+    def get_output_size(self):
+        # generate one image and get its size
+        output = self.generate_frame(self.get_random_input())
+        return output.size
+
     def get_random_input(self):
         return self.random.randn(*self.get_input_shape())
+
+    def generate_frame(self, input_image):
+        # pass input image through model
+        output = self.generator.run(input_image, None, **self.args)
+        # get image from output
+        output_image = PIL.Image.fromarray(output[0], 'RGB')
+        return output_image
 
 
 class GANVideo(Script):
@@ -160,17 +169,15 @@ class GANVideo(Script):
                     new_input[j] = pixel + delta
                 self.inputs.append(new_input)
 
-    def generate_frame(self, input_image):
-        # pass input image through model
-        output = self.model.generator.run(input_image, None, **self.model.args)
-        # get image from output
-        output_image = PIL.Image.fromarray(output[0], 'RGB')
-        return output_image
-
     def convert(self):
         # create tensorflow session in preparation for unpickling model
         self.preview.progress_update("starting tensorflow session...")
-        session = dnnlib.tflib.init_tf()
+        try:
+            session = dnnlib.tflib.init_tf()
+        except AssertionError:
+            # this happens every time the gan video is rerun without restarting the app
+            print("caught you")
+            pass
         self.preview.progress_amount(5)
 
         # load model
@@ -193,14 +200,14 @@ class GANVideo(Script):
                 self.generate_input()
                 self.preview.progress_update("generating frames...")
 
-            frame = self.generate_frame(self.inputs.pop(0))  # remove first input
+            frame = self.model.generate_frame(self.inputs.pop(0))  # remove first input
 
             # write frame to output
             frame_array = cv2.cvtColor(array(frame), cv2.COLOR_RGB2BGR)
             result.write(frame_array)  # write method takes numpy array as parameter
 
-            # update preview once every 5 frames
-            if frames % 5 == 0:
+            # update preview once every 10 frames
+            if frames % 10 == 0 or frames == frames_goal:
                 self.preview.progress_amount(10 + 85 * frames / frames_goal)
                 self.preview.put_image(frame)
 
